@@ -1,0 +1,2 @@
+# Implementation roadmap
+The repository is organized by the requested 18 phases: skeleton; config/data/API; ingestion; vector/RAG; hybrid/reranking; LangGraph; MCP; GitHub; safe tests; approval; optional CrewAI; n8n; observability/cost; evaluation; frontend; Docker; CI/CD; documentation/demo. External credential-dependent operations remain adapters or explicit simulations, never fake successful integrations.

@@ -1,0 +1,2 @@
+# RAG
+Ingestion uses AST symbol chunks for Python and bounded chunks for other supported text/code formats. Metadata includes repository, branch, file, language, symbol, chunk type and line range. Retrieval uses lexical scoring + deterministic dense fallback + reciprocal rank fusion + configurable reranking. `VectorStore` is an abstraction; `LocalVectorStore` is runnable offline and Qdrant is provisioned for production adapter work.

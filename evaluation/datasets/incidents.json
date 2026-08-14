@@ -1,0 +1,15 @@
+[
+  {
+    "id": "checkout-500",
+    "query": "Checkout requests started returning HTTP 500 after latest deployment",
+    "relevant_files": [
+      "checkout/service.py",
+      "config/production.yaml"
+    ],
+    "expected_root_cause_terms": [
+      "timeout",
+      "null",
+      "none"
+    ]
+  }
+]

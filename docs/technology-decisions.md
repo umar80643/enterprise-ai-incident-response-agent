@@ -1,0 +1,11 @@
+# Technology decisions
+- Python/FastAPI/Pydantic v2: typed async service API.
+- LangGraph: resumable conditional workflow and human gates.
+- LangChain core: provider/document interoperability without hiding orchestration.
+- CrewAI: optional bounded collaboration only.
+- PostgreSQL/SQLAlchemy/Alembic: transactional durable application history.
+- Redis: ephemeral coordination, locks, cache and rate limiting.
+- Qdrant: production vector service behind replaceable interface.
+- Next.js/React/TypeScript: focused operational UI.
+- Docker Compose: reproducible local stack.
+- GitHub Actions: lint, types, tests, dependency audit and builds.
