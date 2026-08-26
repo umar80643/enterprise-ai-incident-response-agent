@@ -1,5 +1,7 @@
-import json, sys
+import json
+import sys
 from pathlib import Path
+
 sys.path.insert(0,str(Path(__file__).parents[1]/"backend"))
 from app.rag.chunking import ingest_tree
 from app.rag.retrieval import hybrid_retrieve

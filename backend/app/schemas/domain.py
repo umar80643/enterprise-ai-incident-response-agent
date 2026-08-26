@@ -1,18 +1,34 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
+
 from pydantic import BaseModel, Field
 
+
 def now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
+
 
 class Status(StrEnum):
-    PENDING="PENDING"; RUNNING="RUNNING"; SUCCESS="SUCCESS"; FAILED="FAILED"; WAITING_APPROVAL="WAITING_APPROVAL"; REJECTED="REJECTED"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    WAITING_APPROVAL = "WAITING_APPROVAL"
+    REJECTED = "REJECTED"
+
 
 class ApprovalDecision(StrEnum):
-    APPROVE="APPROVE"; REJECT="REJECT"; REQUEST_CHANGES="REQUEST_CHANGES"
+    APPROVE = "APPROVE"
+    REJECT = "REJECT"
+    REQUEST_CHANGES = "REQUEST_CHANGES"
+
 
 class Permission(StrEnum):
-    READ_ONLY="READ_ONLY"; SAFE_EXECUTION="SAFE_EXECUTION"; WRITE_REPOSITORY="WRITE_REPOSITORY"; CREATE_PR="CREATE_PR"
+    READ_ONLY = "READ_ONLY"
+    SAFE_EXECUTION = "SAFE_EXECUTION"
+    WRITE_REPOSITORY = "WRITE_REPOSITORY"
+    CREATE_PR = "CREATE_PR"
+
 
 class InvestigationPlan(BaseModel):
     objective: str
@@ -20,6 +36,7 @@ class InvestigationPlan(BaseModel):
     required_tools: list[str]
     dependencies: list[str] = []
     expected_evidence: list[str]
+
 
 class Evidence(BaseModel):
     id: str
@@ -34,6 +51,7 @@ class Evidence(BaseModel):
     score: float = 0
     source: str = "retrieved"
 
+
 class Hypothesis(BaseModel):
     hypothesis: str
     evidence_ids: list[str]
@@ -43,6 +61,7 @@ class Hypothesis(BaseModel):
     counter_evidence: list[str] = []
     assumptions: list[str] = []
 
+
 class RootCauseAnalysis(BaseModel):
     status: str = "SUPPORTED"
     root_cause: str
@@ -51,6 +70,7 @@ class RootCauseAnalysis(BaseModel):
     inference: str
     assumptions: list[str] = []
 
+
 class PatchProposal(BaseModel):
     summary: str
     changed_files: list[str]
@@ -58,16 +78,19 @@ class PatchProposal(BaseModel):
     expected_behavior: str
     side_effects: list[str] = []
 
+
 class TestPlan(BaseModel):
     unit_tests: list[str] = []
     integration_tests: list[str] = []
     regression_tests: list[str] = []
+
 
 class TestResult(BaseModel):
     passed: bool
     command: list[str]
     output: str
     duration_ms: int = 0
+
 
 class ReviewResult(BaseModel):
     approved: bool
@@ -76,6 +99,7 @@ class ReviewResult(BaseModel):
     missing_tests: list[str] = []
     unsupported_assumptions: list[str] = []
 
+
 class UsageRecord(BaseModel):
     agent: str
     model: str
@@ -83,10 +107,12 @@ class UsageRecord(BaseModel):
     output_tokens: int = 0
     estimated_cost: float = 0.0
 
+
 class RepositoryIndexRequest(BaseModel):
     name: str
     path: str
     branch: str = "main"
+
 
 class InvestigationCreate(BaseModel):
     repository_id: str
@@ -94,8 +120,10 @@ class InvestigationCreate(BaseModel):
     description: str
     branch: str = "main"
 
+
 class ApprovalInput(BaseModel):
     comment: str | None = None
+
 
 class RequestChangesInput(BaseModel):
     comment: str

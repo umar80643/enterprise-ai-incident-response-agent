@@ -1,5 +1,7 @@
 from typing import TypedDict
+
 from app.schemas.domain import *
+
 
 class WorkflowState(TypedDict, total=False):
     request_id: str
@@ -11,6 +13,7 @@ class WorkflowState(TypedDict, total=False):
     issue: str
     incident_description: str
     execution_plan: InvestigationPlan
+    _chunks: list
     retrieved_context: list[Evidence]
     relevant_files: list[str]
     suspected_components: list[str]

@@ -1,5 +1,7 @@
 from pathlib import Path
+
 from app.core.errors import PermissionDenied
+
 
 def safe_repo_path(root: str | Path, requested: str | Path) -> Path:
     base = Path(root).resolve()
