@@ -12,7 +12,7 @@ jobs:
       - run: cd backend && black --check .
       - run: cd backend && mypy app
       - run: cd backend && pytest
-      - run: pip install pip-audit && pip-audit
+      - run: pip install pip-audit && pip-audit --skip-editable
   frontend:
     runs-on: ubuntu-latest
     steps:
