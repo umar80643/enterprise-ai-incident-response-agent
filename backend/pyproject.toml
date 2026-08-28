@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "enterprise-ai-incident-agent"
 version = "0.1.0"
 requires-python = ">=3.11"
+
 dependencies = [
   "fastapi>=0.115,<1",
   "uvicorn[standard]>=0.30,<1",
@@ -16,14 +17,22 @@ dependencies = [
   "aiosqlite>=0.20,<1",
   "redis>=5,<7",
   "httpx>=0.27,<1",
-  "langgraph>=0.2,<1",
-  "langchain-core>=0.3,<1",
+  "langgraph>=1.0.10,<2",
+  "langchain-core>=1.2.22,<2",
   "tenacity>=9,<10",
   "structlog>=24,<26",
   "pyyaml>=6,<7",
 ]
+
 [project.optional-dependencies]
-dev = ["pytest>=8,<9","pytest-asyncio>=0.24,<1","ruff>=0.6,<1","black>=24,<26","mypy>=1.11,<2","coverage>=7,<8"]
+dev = [
+  "pytest>=9,<10",
+  "pytest-asyncio>=1.3,<2",
+  "ruff>=0.6,<1",
+  "black>=26.3.1,<27",
+  "mypy>=1.11,<2",
+  "coverage>=7,<8",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -35,10 +44,12 @@ target-version = "py311"
 
 [tool.black]
 line-length = 100
+target-version = ["py313"]
 
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_ignores = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
