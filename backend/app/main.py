@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.routes import router
-from app.core.logging import configure_logging
 from app.core.errors import AppError
+from app.core.logging import configure_logging
 
 configure_logging()
 
