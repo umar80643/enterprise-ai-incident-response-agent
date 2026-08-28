@@ -115,7 +115,7 @@ function statusLabel(status?: string) {
     case "WAITING_APPROVAL":
       return "Awaiting approval";
     case "SUCCESS":
-      return "Resolved";
+      return "Case closed";
     case "RUNNING":
       return "Investigating";
     case "REJECTED":
@@ -138,6 +138,39 @@ function statusClass(status?: string) {
     default:
       return "status-neutral";
   }
+}
+
+// A short, human-legible case number derived from the investigation id —
+// cosmetic only, never sent back to the API.
+function caseNumber(investigation: Investigation | null) {
+  if (!investigation) return "—";
+  const year = new Date(investigation.created_at || Date.now()).getFullYear();
+  const tail = investigation.id.replace(/-/g, "").slice(-4).toUpperCase();
+  return `CASE-${year}-${tail}`;
+}
+
+// Unified diffs carry their own meaning in the +/- prefixes — render that
+// instead of flattening it to plain, uncolored text.
+function DiffView({ diff }: { diff: string }) {
+  const lines = diff.split("\n");
+
+  return (
+    <pre className="diff-view">
+      {lines.map((line, index) => {
+        let kind = "context";
+        if (line.startsWith("+") && !line.startsWith("+++")) kind = "add";
+        else if (line.startsWith("-") && !line.startsWith("---")) kind = "remove";
+        else if (line.startsWith("@@") || line.startsWith("diff ") || line.startsWith("index ")) kind = "meta";
+
+        return (
+          <span className={`diff-line ${kind}`} key={index}>
+            {line.length ? line : " "}
+            {"\n"}
+          </span>
+        );
+      })}
+    </pre>
+  );
 }
 
 export default function Home() {
@@ -335,7 +368,7 @@ export default function Home() {
       setChangeComment("");
 
       setActionMessage(
-        "Changes requested successfully. The investigation remains open for review."
+        "Logged. The case stays open — the agent will fold this into the next pass."
       );
     } catch (err) {
       setError(
@@ -356,15 +389,13 @@ export default function Home() {
       {/* HEADER */}
       <header className="topbar">
         <div className="brand-wrap">
-          <div className="brand-mark">AI</div>
+          <div className="brand-mark">BB</div>
 
           <div>
-            <div className="brand-title">
-              Incident Resolution
-            </div>
+            <div className="brand-title">Black Box</div>
 
             <div className="brand-subtitle">
-              Enterprise Engineering Agent
+              Incident Recorder
             </div>
           </div>
         </div>
@@ -372,12 +403,12 @@ export default function Home() {
         <div className="topbar-right">
           <div className="environment-pill">
             <span className="pulse-dot" />
-            Development-safe
+            Writes disabled
           </div>
 
           <div className="api-pill">
             <span className="api-dot" />
-            API Online
+            Agent online
           </div>
         </div>
       </header>
@@ -386,18 +417,19 @@ export default function Home() {
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow">
-            AI-POWERED INCIDENT RESPONSE
+            EVERY INCIDENT LEAVES A TRAIL
           </div>
 
           <h1>
-            Investigate incidents with
-            <span> evidence, not guesses.</span>
+            Don&apos;t guess why it broke.
+            <span>Follow the trail back to the line that broke it.</span>
           </h1>
 
           <p>
-            Trace production failures, retrieve repository evidence,
-            identify root causes, generate minimal fixes, and keep
-            every code change behind human approval.
+            Describe what happened. The agent pulls the exact evidence from
+            your repository, names a root cause it can defend, and drafts the
+            smallest fix that resolves it — then waits for you before anything
+            touches the codebase.
           </p>
 
           <div className="hero-tags">
@@ -410,25 +442,23 @@ export default function Home() {
         </div>
 
         <div className="hero-status-card">
-          <div className="mini-label">
-            SYSTEM STATUS
-          </div>
+          <div className="mini-label">RECORDER STATUS</div>
 
           <div className="system-status">
             <span className="large-pulse" />
 
             <div>
-              <strong>
-                All systems operational
-              </strong>
-
-              <span>
-                Backend · RAG · Agent workflow
-              </span>
+              <strong>All systems operational</strong>
+              <span>Backend · RAG · Agent workflow</span>
             </div>
           </div>
 
           <div className="system-divider" />
+
+          <div className="system-row">
+            <span>Case</span>
+            <strong>{caseNumber(investigation)}</strong>
+          </div>
 
           <div className="system-row">
             <span>Repository</span>
@@ -442,9 +472,7 @@ export default function Home() {
 
           <div className="system-row">
             <span>Write access</span>
-            <strong className="safe-text">
-              Blocked
-            </strong>
+            <strong className="safe-text">Blocked</strong>
           </div>
         </div>
       </section>
@@ -455,9 +483,7 @@ export default function Home() {
           <div className="metric-icon">◉</div>
 
           <div>
-            <div className="metric-label">
-              Investigation
-            </div>
+            <div className="metric-label">Investigation</div>
 
             <div className="metric-value">
               {investigation ? "Active" : "Ready"}
@@ -469,9 +495,7 @@ export default function Home() {
           <div className="metric-icon">⌁</div>
 
           <div>
-            <div className="metric-label">
-              Status
-            </div>
+            <div className="metric-label">Status</div>
 
             <div className="metric-value">
               {investigation
@@ -485,13 +509,9 @@ export default function Home() {
           <div className="metric-icon">◇</div>
 
           <div>
-            <div className="metric-label">
-              Evidence
-            </div>
+            <div className="metric-label">Evidence</div>
 
-            <div className="metric-value">
-              {evidence.length}
-            </div>
+            <div className="metric-value">{evidence.length}</div>
           </div>
         </div>
 
@@ -499,9 +519,7 @@ export default function Home() {
           <div className="metric-icon">✓</div>
 
           <div>
-            <div className="metric-label">
-              Risk level
-            </div>
+            <div className="metric-label">Risk level</div>
 
             <div className="metric-value">
               {review?.risk_level ?? "—"}
@@ -515,42 +533,30 @@ export default function Home() {
         <div className="panel incident-panel">
           <div className="panel-header">
             <div>
-              <div className="section-kicker">
-                01 · INCIDENT
-              </div>
+              <div className="section-kicker">EXHIBIT A · INCIDENT</div>
 
-              <h2>
-                Start an investigation
-              </h2>
+              <h2>Open a case</h2>
             </div>
 
-            <span className="repo-badge">
-              {repositoryId}
-            </span>
+            <span className="repo-badge">{repositoryId}</span>
           </div>
 
           <div className="form-group">
-            <label>Incident title</label>
+            <label>What broke</label>
 
             <input
               value={title}
-              onChange={(event) =>
-                setTitle(event.target.value)
-              }
+              onChange={(event) => setTitle(event.target.value)}
               placeholder="Example: Checkout 500"
             />
           </div>
 
           <div className="form-group">
-            <label>
-              Incident description
-            </label>
+            <label>What you know so far</label>
 
             <textarea
               value={description}
-              onChange={(event) =>
-                setDescription(event.target.value)
-              }
+              onChange={(event) => setDescription(event.target.value)}
               rows={5}
               placeholder="Describe the production issue..."
             />
@@ -564,7 +570,7 @@ export default function Home() {
             {loading ? (
               <>
                 <span className="button-spinner" />
-                Investigating...
+                Following the trail...
               </>
             ) : (
               <>
@@ -574,19 +580,13 @@ export default function Home() {
             )}
           </button>
 
-          {error && (
-            <div className="error-box">
-              {error}
-            </div>
-          )}
+          {error && <div className="error-box">{error}</div>}
         </div>
 
         <div className="panel workflow-panel">
           <div className="panel-header">
             <div>
-              <div className="section-kicker">
-                02 · WORKFLOW
-              </div>
+              <div className="section-kicker">EXHIBIT B · WORKFLOW</div>
 
               <h2>Agent execution</h2>
             </div>
@@ -598,10 +598,7 @@ export default function Home() {
                 )}`}
               >
                 <span className="status-dot" />
-
-                {statusLabel(
-                  investigation.status
-                )}
+                {statusLabel(investigation.status)}
               </span>
             )}
           </div>
@@ -610,38 +607,25 @@ export default function Home() {
             <div
               className="workflow-progress-bar"
               style={{
-                width: `${
-                  (completedSteps / steps.length) * 100
-                }%`,
+                width: `${(completedSteps / steps.length) * 100}%`,
               }}
             />
           </div>
 
           <div className="workflow-list">
             {steps.map((step, index) => {
-              const complete =
-                index < completedSteps;
-
-              const active =
-                !complete &&
-                index === completedSteps;
+              const complete = index < completedSteps;
+              const active = !complete && index === completedSteps;
 
               return (
                 <div
                   key={step}
-                  className={`workflow-step ${
-                    complete ? "complete" : ""
-                  } ${
+                  className={`workflow-step ${complete ? "complete" : ""} ${
                     active ? "active" : ""
                   }`}
                 >
                   <div className="workflow-number">
-                    {complete
-                      ? "✓"
-                      : String(index + 1).padStart(
-                          2,
-                          "0"
-                        )}
+                    {complete ? "✓" : String(index + 1).padStart(2, "0")}
                   </div>
 
                   <div>
@@ -666,43 +650,33 @@ export default function Home() {
       <section className="full-panel">
         <div className="panel-header">
           <div>
-            <div className="section-kicker">
-              03 · ROOT CAUSE
-            </div>
+            <div className="section-kicker">EXHIBIT C · ROOT CAUSE</div>
 
-            <h2>
-              What the agent discovered
-            </h2>
+            <h2>What the agent found</h2>
           </div>
 
           {rootCause && (
             <div className="confidence-chip">
-              Confidence{" "}
-              {(rootCause.confidence * 100).toFixed(0)}%
+              Confidence {(rootCause.confidence * 100).toFixed(0)}%
             </div>
           )}
         </div>
 
         {rootCause ? (
           <div className="root-cause-content">
-            <div className="root-cause-icon">
-              !
-            </div>
+            <div className="root-cause-icon">!</div>
 
             <div>
               <div className="root-cause-title">
                 {rootCause.root_cause}
               </div>
 
-              <p>
-                {rootCause.inference}
-              </p>
+              <p>{rootCause.inference}</p>
             </div>
           </div>
         ) : (
           <div className="empty-state">
-            Run an investigation to generate the
-            root-cause analysis.
+            Nothing to report yet. Run an investigation to start the trail.
           </div>
         )}
       </section>
@@ -712,18 +686,12 @@ export default function Home() {
         <div className="panel evidence-panel">
           <div className="panel-header">
             <div>
-              <div className="section-kicker">
-                04 · EVIDENCE
-              </div>
+              <div className="section-kicker">EXHIBIT D · EVIDENCE</div>
 
-              <h2>
-                Retrieved evidence
-              </h2>
+              <h2>Retrieved from the repository</h2>
             </div>
 
-            <span className="count-badge">
-              {evidence.length}
-            </span>
+            <span className="count-badge">{evidence.length}</span>
           </div>
 
           {evidence.length === 0 ? (
@@ -733,26 +701,17 @@ export default function Home() {
           ) : (
             <div className="evidence-list">
               {evidence.map((item) => (
-                <div
-                  className="evidence-item"
-                  key={item.id}
-                >
+                <div className="evidence-item" key={item.id}>
                   <div className="evidence-top">
                     <span className="file-type">
-                      {item.file_path
-                        .split(".")
-                        .pop()
-                        ?.toUpperCase()}
+                      {item.file_path.split(".").pop()?.toUpperCase()}
                     </span>
 
                     <div className="evidence-file">
-                      <strong>
-                        {item.file_path}
-                      </strong>
+                      <strong>{item.file_path}</strong>
 
                       <span>
-                        Lines {item.line_start}–
-                        {item.line_end}
+                        Lines {item.line_start}–{item.line_end}
                       </span>
                     </div>
 
@@ -761,9 +720,7 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <div className="evidence-code">
-                    {item.excerpt}
-                  </div>
+                  <div className="evidence-code">{item.excerpt}</div>
                 </div>
               ))}
             </div>
@@ -773,71 +730,43 @@ export default function Home() {
         <div className="panel patch-panel">
           <div className="panel-header">
             <div>
-              <div className="section-kicker">
-                05 · SOLUTION
-              </div>
+              <div className="section-kicker">EXHIBIT E · SOLUTION</div>
 
-              <h2>
-                Proposed patch
-              </h2>
+              <h2>Proposed patch</h2>
             </div>
 
             {patch && (
-              <span className="review-approved">
-                Evidence grounded
-              </span>
+              <span className="review-approved">Evidence grounded</span>
             )}
           </div>
 
           {patch ? (
             <>
               <div className="patch-summary">
-                <strong>
-                  {patch.summary}
-                </strong>
-
-                <span>
-                  {patch.expected_behavior}
-                </span>
+                <strong>{patch.summary}</strong>
+                <span>{patch.expected_behavior}</span>
               </div>
 
               <div className="diff-header">
-                <span>
-                  {patch.changed_files[0] ??
-                    "checkout/service.py"}
-                </span>
-
-                <span>
-                  Unified diff
-                </span>
+                <span>{patch.changed_files[0] ?? "checkout/service.py"}</span>
+                <span>Unified diff</span>
               </div>
 
-              <pre className="diff-view">
-                {patch.unified_diff}
-              </pre>
+              <DiffView diff={patch.unified_diff} />
 
               <div className="side-effects">
-                <div className="mini-label">
-                  SIDE EFFECTS
-                </div>
+                <div className="mini-label">SIDE EFFECTS</div>
 
-                {patch.side_effects.map(
-                  (effect) => (
-                    <div
-                      key={effect}
-                      className="side-effect"
-                    >
-                      <span>•</span>
-                      {effect}
-                    </div>
-                  )
-                )}
+                {patch.side_effects.map((effect) => (
+                  <div key={effect} className="side-effect">
+                    <span>•</span>
+                    {effect}
+                  </div>
+                ))}
               </div>
             </>
           ) : (
-            <div className="empty-state">
-              No proposed patch yet.
-            </div>
+            <div className="empty-state">No proposed patch yet.</div>
           )}
         </div>
       </section>
@@ -847,18 +776,12 @@ export default function Home() {
         <div className="panel tests-panel">
           <div className="panel-header">
             <div>
-              <div className="section-kicker">
-                06 · VALIDATION
-              </div>
+              <div className="section-kicker">EXHIBIT F · VALIDATION</div>
 
-              <h2>
-                Test validation
-              </h2>
+              <h2>Test validation</h2>
             </div>
 
-            <span className="count-badge">
-              {testResults.length}
-            </span>
+            <span className="count-badge">{testResults.length}</span>
           </div>
 
           {testResults.length === 0 ? (
@@ -867,42 +790,25 @@ export default function Home() {
             </div>
           ) : (
             <div className="test-list">
-              {testResults.map(
-                (test, index) => (
+              {testResults.map((test, index) => (
+                <div
+                  className="test-item"
+                  key={`${test.command.join(" ")}-${index}`}
+                >
                   <div
-                    className="test-item"
-                    key={`${test.command.join(
-                      " "
-                    )}-${index}`}
+                    className={`test-icon ${test.passed ? "passed" : "failed"}`}
                   >
-                    <div
-                      className={`test-icon ${
-                        test.passed
-                          ? "passed"
-                          : "failed"
-                      }`}
-                    >
-                      {test.passed
-                        ? "✓"
-                        : "×"}
-                    </div>
-
-                    <div className="test-main">
-                      <strong>
-                        {test.command.join(" ")}
-                      </strong>
-
-                      <span>
-                        {test.output}
-                      </span>
-                    </div>
-
-                    <div className="test-time">
-                      {test.duration_ms}ms
-                    </div>
+                    {test.passed ? "✓" : "×"}
                   </div>
-                )
-              )}
+
+                  <div className="test-main">
+                    <strong>{test.command.join(" ")}</strong>
+                    <span>{test.output}</span>
+                  </div>
+
+                  <div className="test-time">{test.duration_ms}ms</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -910,44 +816,31 @@ export default function Home() {
         <div className="panel approval-panel">
           <div className="panel-header">
             <div>
-              <div className="section-kicker">
-                07 · GOVERNANCE
-              </div>
+              <div className="section-kicker">EXHIBIT G · GOVERNANCE</div>
 
-              <h2>
-                Approval center
-              </h2>
+              <h2>Approval center</h2>
             </div>
 
-            <span className="security-badge">
-              Human gate
-            </span>
+            <span className="security-badge">Human gate</span>
           </div>
 
           {!investigation && (
             <div className="empty-state">
-              Start an investigation to unlock
-              approval controls.
+              Open a case to unlock approval controls.
             </div>
           )}
 
-          {investigation?.status ===
-            "WAITING_APPROVAL" && (
+          {investigation?.status === "WAITING_APPROVAL" && (
             <>
               <div className="approval-alert">
-                <div className="approval-alert-icon">
-                  !
-                </div>
+                <div className="approval-alert-icon">!</div>
 
                 <div>
-                  <strong>
-                    Review required
-                  </strong>
+                  <strong>Review required</strong>
 
                   <span>
-                    Repository writes and PR
-                    creation are blocked until
-                    explicit approval.
+                    Repository writes and PR creation stay blocked until you
+                    say otherwise.
                   </span>
                 </div>
               </div>
@@ -966,9 +859,7 @@ export default function Home() {
                   onClick={requestChanges}
                   disabled={approving}
                 >
-                  {showChangeForm
-                    ? "Submit changes"
-                    : "Request changes"}
+                  {showChangeForm ? "Submit changes" : "Request changes"}
                 </button>
 
                 <button
@@ -976,24 +867,18 @@ export default function Home() {
                   onClick={approveInvestigation}
                   disabled={approving}
                 >
-                  {approving
-                    ? "Processing..."
-                    : "Approve patch"}
+                  {approving ? "Processing..." : "Approve patch"}
                 </button>
               </div>
 
               {showChangeForm && (
                 <div className="change-request-box">
-                  <label>
-                    What should be changed?
-                  </label>
+                  <label>What should be changed?</label>
 
                   <textarea
                     value={changeComment}
                     onChange={(event) =>
-                      setChangeComment(
-                        event.target.value
-                      )
+                      setChangeComment(event.target.value)
                     }
                     rows={3}
                     placeholder="Example: Use a configurable fallback instead of hard-coding 5 seconds."
@@ -1001,8 +886,7 @@ export default function Home() {
                   />
 
                   <div className="change-request-hint">
-                    Your comment will be recorded
-                    with this investigation.
+                    Your comment is recorded with this case.
                   </div>
                 </div>
               )}
@@ -1012,35 +896,24 @@ export default function Home() {
                   <span>✓</span>
 
                   <div>
-                    <strong>
-                      Changes requested
-                    </strong>
-
-                    <p>
-                      {actionMessage}
-                    </p>
+                    <strong>Changes requested</strong>
+                    <p>{actionMessage}</p>
                   </div>
                 </div>
               )}
             </>
           )}
 
-          {investigation?.status ===
-            "SUCCESS" && (
+          {investigation?.status === "SUCCESS" && (
             <>
               <div className="success-card">
-                <div className="success-icon">
-                  ✓
-                </div>
+                <div className="success-icon">✓</div>
 
                 <div>
-                  <strong>
-                    Investigation approved
-                  </strong>
+                  <strong>Case closed</strong>
 
                   <span>
-                    The change was accepted and
-                    the GitHub action completed.
+                    The change was accepted and the GitHub action completed.
                   </span>
                 </div>
               </div>
@@ -1049,73 +922,39 @@ export default function Home() {
                 <div className="pr-card">
                   <div className="pr-row">
                     <span>Mode</span>
-
-                    <strong>
-                      {
-                        investigation
-                          .pull_request.mode
-                      }
-                    </strong>
+                    <strong>{investigation.pull_request.mode}</strong>
                   </div>
 
                   <div className="pr-row">
                     <span>Branch</span>
-
-                    <strong>
-                      {
-                        investigation
-                          .pull_request.branch
-                      }
-                    </strong>
+                    <strong>{investigation.pull_request.branch}</strong>
                   </div>
 
                   <div className="pr-row">
                     <span>Status</span>
-
                     <strong className="safe-text">
-                      {
-                        investigation
-                          .pull_request.status
-                      }
+                      {investigation.pull_request.status}
                     </strong>
                   </div>
 
-                  <p>
-                    {
-                      investigation
-                        .pull_request.message
-                    }
-                  </p>
+                  <p>{investigation.pull_request.message}</p>
                 </div>
               )}
             </>
           )}
 
-          {investigation?.status ===
-            "REJECTED" && (
+          {investigation?.status === "REJECTED" && (
             <div className="rejected-card">
-              <strong>
-                Investigation rejected
-              </strong>
-
-              <span>
-                No repository mutation was
-                performed.
-              </span>
+              <strong>Case rejected</strong>
+              <span>No repository mutation was performed.</span>
             </div>
           )}
         </div>
       </section>
 
       <footer className="footer">
-        <span>
-          Enterprise AI Incident Resolution Agent
-        </span>
-
-        <span>
-          Development environment · GitHub
-          writes disabled
-        </span>
+        <span>Black Box · AI Incident Investigation Agent</span>
+        <span>Development environment · GitHub writes disabled</span>
       </footer>
     </main>
   );
