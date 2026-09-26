@@ -1,4 +1,4 @@
-# Enterprise AI Software Engineering & Incident Resolution Agent  
+# Enterprise AI Software Engineering & Incident Resolution Agent   
 
 Production-style monorepo for evidence-grounded software incident investigation with LangGraph orchestration, hybrid RAG, human approval, controlled GitHub PR creation, MCP-style tool boundaries, observability, evaluation, and a Next.js dashboard.
 
